@@ -1,0 +1,28 @@
+
+<idea-plugin>
+    <id>com.yourcompany.geminiplugin</id>
+    <name>Gemini AI Assistant</name>
+    <vendor>YourCompany</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.kotlin</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService
+                serviceImplementation="com.yourcompany.geminiplugin.settings.GeminiSettingsState"/>
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.yourcompany.geminiplugin.settings.GeminiSettingsConfigurable"
+                id="com.yourcompany.geminiplugin.settings.GeminiSettingsConfigurable"
+                displayName="Gemini AI Assistant"/>
+        <action
+                id="com.yourcompany.geminiplugin.GeminiPromptAction"
+                class="com.yourcompany.geminiplugin.GeminiPromptAction"
+                text="Gemini Prompt"
+                description="Invoke Gemini AI with a prompt."
+                icon="AllIcons.Actions.Execute">
+            <add-to-group group-id="ToolsMenu" anchor="first"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+    </extensions>
+</idea-plugin>
