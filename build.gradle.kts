@@ -38,7 +38,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("233") // Corresponds to 2023.3
-        untilBuild.set("233.*")
+        untilBuild.set("251.*")
     }
 
     runIde {

@@ -10,9 +10,9 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VirtualFileListener
-import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFileEvent
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.application.ApplicationManager
 import javax.swing.JPanel
 import javax.swing.JButton
@@ -28,10 +28,13 @@ import com.intellij.icons.AllIcons
 import javax.swing.JLabel
 import java.awt.Font
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
+import com.intellij.openapi.vfs.VirtualFileListener
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 
 class GeminiToolWindowFactory : ToolWindowFactory {
+
+    private val rawOutputTextArea = JBTextArea(10, 50).apply { isEditable = false }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val mainPanel = JPanel(BorderLayout())
@@ -67,7 +70,6 @@ class GeminiToolWindowFactory : ToolWindowFactory {
 
         // Raw Output Panel (for full response)
         val rawOutputLabel = JBLabel("Full Gemini AI Response:")
-        val rawOutputTextArea = JBTextArea(10, 50).apply { isEditable = false }
         val rawOutputScrollPane = JBScrollPane(rawOutputTextArea)
         val rawOutputPanel = JPanel(BorderLayout())
         rawOutputPanel.add(rawOutputLabel, BorderLayout.NORTH)
@@ -121,11 +123,13 @@ class GeminiToolWindowFactory : ToolWindowFactory {
                 val currentFile: VirtualFile? = editor?.virtualFile
                 val context = currentFile?.path ?: ""
 
-                GeminiCliService.getInstance().execute(project, prompt, context,
+                val geminiCliService = GeminiCliService.getInstance()
+                geminiCliService.execute(project, prompt, context,
                     onOutput = { output ->
                         rawOutputTextArea.append(output + "\n")
                     }
                 )
+                com.yourcompany.geminiplugin.settings.GeminiSettingsState.getInstance().addPromptToHistory(prompt)
             }
         }
 

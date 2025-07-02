@@ -36,8 +36,10 @@ class GeminiCliService {
                         return
                     }
 
+
+
                     val command = listOf(
-                        "gemini",
+                        settings.geminiExecutablePath,
                         "--all_files",
                         "--model", "gemini-2.5-flash",
                         "--sandbox", "false",
@@ -50,6 +52,12 @@ class GeminiCliService {
                     val projectRoot = File(project.basePath ?: ".")
                     processBuilder.directory(projectRoot)
                     processBuilder.environment()["GEMINI_API_KEY"] = apiKey
+
+                    // Ensure node executable is in PATH for gemini CLI
+                    val currentPath = processBuilder.environment()["PATH"]
+                    val nodeBinDir = File(settings.nodeExecutablePath).parent
+                    processBuilder.environment()["PATH"] = if (currentPath.isNullOrBlank()) nodeBinDir else "$nodeBinDir:$currentPath"
+
                     processBuilder.redirectErrorStream(true)
 
                     val process = processBuilder.start()
