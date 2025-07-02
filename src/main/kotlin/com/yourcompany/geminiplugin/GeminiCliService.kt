@@ -10,11 +10,12 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.yourcompany.geminiplugin.settings.GeminiSettingsState
 import java.io.BufferedReader
-import java.io.File
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
+import java.io.File
 
 @Service
 class GeminiCliService {
@@ -22,6 +23,7 @@ class GeminiCliService {
     fun execute(project: Project, prompt: String, context: String, onOutput: (String) -> Unit) {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Running Gemini AI", true) {
             override fun run(indicator: ProgressIndicator) {
+                val fullOutput = StringBuilder()
                 try {
                     val settings = GeminiSettingsState.getInstance()
                     val apiKey = settings.apiKey.ifBlank {
@@ -30,6 +32,7 @@ class GeminiCliService {
 
                     if (apiKey.isNullOrBlank()) {
                         showError("Gemini API Key is not set. Please set it in the plugin settings or as an environment variable.")
+                        println("ERROR: Gemini API Key is not set.")
                         return
                     }
 
@@ -41,6 +44,8 @@ class GeminiCliService {
                         "--yolo",
                         "--prompt", prompt
                     )
+                    println("Executing command: ${command.joinToString(" ")}")
+
                     val processBuilder = ProcessBuilder(command)
                     val projectRoot = File(project.basePath ?: ".")
                     processBuilder.directory(projectRoot)
@@ -52,24 +57,32 @@ class GeminiCliService {
                     val writer = OutputStreamWriter(process.outputStream)
                     writer.write(context)
                     writer.close()
+                    println("Context sent to stdin.\n")
 
                     val reader = BufferedReader(InputStreamReader(process.inputStream))
-                    val output = reader.readText()
+                    var line: String?
+
+                    while (reader.readLine().also { line = it } != null) {
+                        println("CLI Output Line: $line") // Log every line
+                        fullOutput.append(line).append("\n")
+                    }
 
                     val exitCode = process.waitFor()
+                    println("CLI process exited with code: $exitCode") // Log exit code
 
                     ApplicationManager.getApplication().invokeLater {
-                        // Display the raw output in the tool window
-                        onOutput(output)
+                        onOutput(fullOutput.toString())
 
                         if (exitCode == 0) {
-                            showSuccess("Gemini CLI command executed successfully.")
+                            showSuccess("Gemini AI command executed successfully.")
                         } else {
                             showError("Gemini CLI failed with exit code $exitCode.")
+                            println("ERROR: Gemini CLI failed with exit code $exitCode. Full output:\n$fullOutput") // Log error with full output
                         }
                     }
                 } catch (e: Exception) {
                     showError("An error occurred while running Gemini CLI: ${e.message}")
+                    println("EXCEPTION: An error occurred while running Gemini CLI: ${e.message}") // Log exception
                 }
             }
         })

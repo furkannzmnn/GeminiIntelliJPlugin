@@ -25,9 +25,9 @@ class PromptDialog(private val project: Project, private val context: String) : 
     override fun doOKAction() {
         val prompt = textArea.text
         if (prompt.isNotBlank()) {
-            GeminiCliService.getInstance().execute(project, prompt, context) {
-                output -> println("Gemini CLI Output: $output")
-            }
+            GeminiCliService.getInstance().execute(project, prompt, context,
+                onOutput = { output -> println("Gemini CLI Output: $output") },
+            )
         }
         super.doOKAction()
     }
