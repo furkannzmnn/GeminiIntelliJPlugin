@@ -24,5 +24,7 @@
             <add-to-group group-id="ToolsMenu" anchor="first"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>
+
+        <toolWindow factoryClass="com.yourcompany.geminiplugin.GeminiToolWindowFactory" id="Gemini AI" anchor="right"/>
     </extensions>
 </idea-plugin>
